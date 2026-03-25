@@ -5,7 +5,11 @@
       <header class="app-header">
         <div class="container app-header__inner">
           <a class="logo" href="./index.html" aria-label="Ir para a página inicial">
-            <span class="logo__badge" aria-hidden="true">▶</span>
+            <span class="logo__badge" aria-hidden="true">
+              <svg class="bi" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true">
+                <path d="M10.804 8 5 11.886V4.114z"/>
+              </svg>
+            </span>
             <span>EducaFlix</span>
           </a>
 

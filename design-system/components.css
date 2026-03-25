@@ -36,6 +36,13 @@
   background: linear-gradient(135deg, var(--color-primary-500), var(--color-primary-700));
 }
 
+.logo__badge .bi {
+  width: 1rem;
+  height: 1rem;
+  display: block;
+  fill: currentColor;
+}
+
 .nav {
   display: inline-flex;
   align-items: center;
@@ -243,9 +250,12 @@
   background: var(--color-bg-accent);
 }
 
-.card__icon img {
-  width: 20px;
-  height: 20px;
+.card__icon .bi {
+  width: 1.15rem;
+  height: 1.15rem;
+  display: block;
+  fill: currentColor;
+  color: var(--color-primary-700);
 }
 
 .card__title {
@@ -351,6 +361,11 @@
     grid-template-columns: 1fr;
   }
 }
+
+
+
+
+
 
 
 

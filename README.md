@@ -8,17 +8,12 @@ Frontend inicial da plataforma web de vídeos educacionais **EducaFlix**, com fo
 - CSS3 (com Design System em arquivos separados)
 - JavaScript ES Modules (Web Components simples para reutilização)
 - Google Fonts (`Sora` e `Manrope`)
-- SVGs próprios para ícones/símbolos
+- Bootstrap Icons (SVG inline)
 
 ## Estrutura de pastas
 
 ```text
 .
-├── assets/
-│   └── icons/
-│       ├── book.svg
-│       ├── rocket.svg
-│       └── shield.svg
 ├── design-system/
 │   ├── base.css
 │   ├── components.css
@@ -75,9 +70,9 @@ Componente reutilizável: `<app-input>`
 
 ### 5) Ícones/símbolos
 
-- Ícones em SVG na pasta `assets/icons`
-- Usados nos cards da home para reforço visual de categorias/benefícios
-- Símbolo de play no logo da plataforma
+- Ícones da biblioteca **Bootstrap Icons** em SVG inline
+- Usados nos cards da home e no símbolo de play do logo
+- Embutidos diretamente no markup para funcionar sem dependência de CDN
 
 ## Páginas implementadas
 
@@ -129,3 +124,6 @@ Depois acesse `http://localhost:5500`.
 - Validações de formulário (regras de senha, e-mail, mensagens de erro)
 - Fluxo real de autenticação/login
 - Testes automatizados
+
+
+
