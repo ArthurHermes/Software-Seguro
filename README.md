@@ -46,12 +46,15 @@ Frontend inicial da plataforma web de vídeos educacionais **EducaFlix**, com fo
 
 Definida em `design-system/tokens.css` com variáveis CSS:
 
-- Cor principal: `--color-primary-600` / `--color-primary-700` (azul)
-- Fundo principal: `--color-bg-main`
-- Superfícies: `--color-bg-surface`
-- Variações e apoio: `--color-primary-100`, `--color-bg-accent`
-- Textos: `--color-text-900`, `--color-text-700`, `--color-text-500`
-- Bordas e estados: `--color-border`, `--color-success`
+- Cor principal (base): `--color-primary-500` = `#1D96D5`
+- Cor principal (escura): `--color-primary-600` = `#1479AD`
+- Cor principal (mais escura): `--color-primary-700` = `#0F5F8A`
+- Fundo principal: `--color-bg-main` = `#F5F8FC`
+- Fundo de superfície: `--color-bg-surface` = `#FFFFFF`
+- Fundo de apoio/acento: `--color-bg-accent` = `#EAF4FF`
+- Variação clara da principal: `--color-primary-100` = `#DFF1FB`
+- Textos: `--color-text-900` = `#172033`, `--color-text-700` = `#394763`, `--color-text-500` = `#69789B`
+- Bordas e estados: `--color-border` = `#D6E2F1`, `--color-success` = `#157347`
 
 ### 3) Botões
 
@@ -96,34 +99,11 @@ Componente reutilizável: `<app-input>`
 - Link/botão para voltar à tela inicial
 - Mesmo padrão visual da home
 
+  
 ## Decisões de design
 
 - **Azul como cor principal**: transmite confiança e clareza, adequado para educação digital.
 - **Fundo claro com gradientes suaves**: melhora percepção de profundidade sem poluição visual.
 - **Tipografia Sora + Manrope**: combinação moderna com boa legibilidade em desktop e mobile.
 - **Componentes Web reutilizáveis** (`app-header`, `app-button`, `app-input`): simplificam manutenção e facilitam escala.
-
-## Como rodar o projeto
-
-Como é um frontend estático, há duas formas simples:
-
-1. Abrir `index.html` diretamente no navegador.
-2. Servir com um servidor local (recomendado para ES Modules), por exemplo:
-
-```bash
-# Python 3
-python -m http.server 5500
-```
-
-Depois acesse `http://localhost:5500`.
-
-## O que ainda não foi implementado
-
-- Backend/API
-- Persistência de usuários
-- Validações de formulário (regras de senha, e-mail, mensagens de erro)
-- Fluxo real de autenticação/login
-- Testes automatizados
-
-
 
