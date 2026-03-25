@@ -1,0 +1,94 @@
+﻿<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>EducaFlix | Início</title>
+    <meta name="description" content="EducaFlix: plataforma de vídeos educacionais com trilhas organizadas e aprendizado contínuo." />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&family=Sora:wght@600;700&display=swap" rel="stylesheet" />
+
+    <link rel="stylesheet" href="./design-system/base.css" />
+    <link rel="stylesheet" href="./design-system/components.css" />
+  </head>
+  <body>
+    <app-header current="home"></app-header>
+
+    <main class="page" id="topo">
+      <section class="hero">
+        <div class="container hero__wrap">
+          <div>
+            <p class="hero__kicker">Plataforma de aprendizado em vídeo</p>
+            <h1 class="hero__title">Aprenda no seu ritmo com uma experiência de estudo clara e moderna.</h1>
+            <p class="hero__subtitle">
+              O EducaFlix organiza conteúdos por trilhas para facilitar sua evolução. Comece hoje e construa uma rotina de estudo prática com vídeos curtos e objetivos.
+            </p>
+
+            <div class="hero__actions">
+              <app-button variant="primary" href="./cadastro.html" label="Quero me cadastrar"></app-button>
+              <app-button variant="secondary" href="#beneficios" label="Ver benefícios"></app-button>
+            </div>
+          </div>
+
+          <aside class="hero__panel" aria-label="Indicadores da plataforma">
+            <div class="hero__stats">
+              <article class="stat">
+                <p class="stat__value">+320 aulas</p>
+                <p class="stat__label">Conteúdo em áreas de tecnologia, carreira e negócios.</p>
+              </article>
+              <article class="stat">
+                <p class="stat__value">Trilhas guiadas</p>
+                <p class="stat__label">Sequência recomendada para quem quer sair do básico ao avançado.</p>
+              </article>
+              <article class="stat">
+                <p class="stat__value">Acesso contínuo</p>
+                <p class="stat__label">Assista quando quiser e avance com autonomia.</p>
+              </article>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <section class="features" id="beneficios">
+        <div class="container">
+          <h2 class="section-title">Por que escolher o EducaFlix?</h2>
+          <p class="section-subtitle">Um ambiente pensado para foco, consistência visual e progressão clara do seu aprendizado.</p>
+
+          <div class="card-grid">
+            <article class="card">
+              <div class="card__icon" aria-hidden="true">
+                <img src="./assets/icons/book.svg" alt="" />
+              </div>
+              <h3 class="card__title">Conteúdo organizado</h3>
+              <p class="card__description">Navegação por categorias e trilhas para reduzir tempo de busca e aumentar tempo de estudo.</p>
+            </article>
+
+            <article class="card">
+              <div class="card__icon" aria-hidden="true">
+                <img src="./assets/icons/rocket.svg" alt="" />
+              </div>
+              <h3 class="card__title">Evolução acelerada</h3>
+              <p class="card__description">Aulas curtas, objetivas e conectadas para manter progresso constante semana após semana.</p>
+            </article>
+
+            <article class="card">
+              <div class="card__icon" aria-hidden="true">
+                <img src="./assets/icons/shield.svg" alt="" />
+              </div>
+              <h3 class="card__title">Experiência confiável</h3>
+              <p class="card__description">Interface limpa e pronta para futura integração com API e recursos de conta do aluno.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="container helper-text">
+      <p>EducaFlix © <span id="current-year"></span></p>
+    </footer>
+
+    <script type="module" src="./src/main.js"></script>
+  </body>
+</html>
