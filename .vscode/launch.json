@@ -1,0 +1,16 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "java",
+      "name": "Abrigo CLI (JDBC)",
+      "request": "launch",
+      "mainClass": "Main",
+      "cwd": "${workspaceFolder}/MVC",
+      "classPaths": [
+        "${workspaceFolder}/MVC/out",
+        "${workspaceFolder}/MVC/lib/sqlite-jdbc.jar"
+      ]
+    }
+  ]
+}

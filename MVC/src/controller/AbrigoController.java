@@ -63,11 +63,14 @@ public class AbrigoController {
         String novaEspecie = view.lerTextoObrigatorio("Nova especie");
         int novaIdade = view.lerInteiroPositivo("Nova idade");
 
-        animal.setNome(novoNome);
-        animal.setEspecie(novaEspecie);
-        animal.setIdade(novaIdade);
+        boolean atualizado = animalDao.atualizar(id, novoNome, novaEspecie, novaIdade);
 
-        view.exibirMensagem("Animal atualizado com sucesso.");
+        if (atualizado) {
+            view.exibirMensagem("Animal atualizado com sucesso.");
+            return;
+        }
+
+        view.exibirMensagem("Animal nao encontrado para o ID informado.");
     }
 
     private void excluirAnimal() {

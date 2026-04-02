@@ -10,5 +10,7 @@ public interface AnimalDao {
 
     Animal buscarPorId(int id);
 
+    boolean atualizar(int id, String nome, String especie, int idade);
+
     boolean excluirPorId(int id);
 }
