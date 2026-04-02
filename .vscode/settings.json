@@ -1,0 +1,5 @@
+{
+  "java.project.referencedLibraries": [
+    "MVC/lib/**/*.jar"
+  ]
+}
