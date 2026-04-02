@@ -10,8 +10,9 @@ Projeto Java com arquitetura MVC + DAO usando JDBC (SQLite) para persistencia em
 
 ## Banco de dados
 - Tipo: SQLite
-- Arquivo local: `abrigo.db` (criado automaticamente na pasta `MVC`)
+- Arquivo local: `abrigo.db` (ao lado da pasta `out`, normalmente em `MVC\abrigo.db`)
 - Tabela: `animais` (criada automaticamente)
+- Ao iniciar o app, o caminho completo do banco e exibido no console (`Banco SQLite em uso: ...`).
 
 ## Dependencia JDBC
 Baixe o driver SQLite JDBC e coloque em `MVC\lib\sqlite-jdbc.jar`.
