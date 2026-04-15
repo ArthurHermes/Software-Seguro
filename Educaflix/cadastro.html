@@ -21,7 +21,7 @@
           <h1 class="auth__title">Criar conta no EducaFlix</h1>
           <p class="auth__subtitle">Preencha os dados abaixo para começar sua jornada de estudos.</p>
 
-          <form class="auth__form" action="#" method="post">
+          <form class="auth__form" id="cadastro-form" action="#" method="post">
             <app-input label="Nome" name="nome" id="nome" type="text" placeholder="Seu nome completo"></app-input>
             <app-input label="E-mail" name="email" id="email" type="email" placeholder="voce@exemplo.com"></app-input>
             <app-input label="Senha" name="senha" id="senha" type="password" placeholder="Digite sua senha"></app-input>
@@ -32,6 +32,7 @@
               type="password"
               placeholder="Repita sua senha"
             ></app-input>
+            <p id="form-feedback" class="feedback" aria-live="polite"></p>
 
             <div class="auth__actions">
               <app-button type="submit" variant="primary" label="Cadastrar"></app-button>

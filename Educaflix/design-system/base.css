@@ -1,0 +1,36 @@
+@import url("./tokens.css");
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  min-height: 100vh;
+  font-family: var(--font-body);
+  color: var(--color-text-900);
+  background:
+    radial-gradient(circle at 15% -5%, #d9efff 0%, rgba(217, 239, 255, 0) 50%),
+    linear-gradient(180deg, var(--color-bg-main) 0%, #eef3fb 100%);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.container {
+  width: min(1120px, calc(100% - 3rem));
+  margin-inline: auto;
+}
+
+.page {
+  padding-bottom: 4rem;
+}
