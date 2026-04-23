@@ -2,7 +2,15 @@
   "name": "educaflix",
   "version": "1.0.0",
   "private": true,
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
   "scripts": {
-    "start": "node server.js"
+    "dev": "npm run dev --workspace frontend",
+    "dev:frontend": "npm run dev --workspace frontend",
+    "dev:backend": "npm run dev --workspace backend",
+    "start": "npm run start --workspace backend",
+    "build": "npm run build --workspace frontend"
   }
 }

@@ -1,2 +1,7 @@
 .env
 Educaflix/data/usuarios.json
+Educaflix/node_modules/
+Educaflix/frontend/.next/
+Educaflix/frontend/node_modules/
+Educaflix/backend/node_modules/
+Educaflix/backend/data/usuarios.json
