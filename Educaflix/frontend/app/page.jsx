@@ -22,24 +22,25 @@ export default function HomePage() {
               </p>
 
               <div className="hero__actions">
-                <Button href="/cadastro">Quero me cadastrar</Button>
-                <Button href="#beneficios" variant="secondary">Ver beneficios</Button>
+                <Button href="/login">Entrar</Button>
+                <Button href="/cadastro" variant="secondary">Cadastrar</Button>
+                <Button href="/videos" variant="secondary">Ver catalogo</Button>
               </div>
             </div>
 
             <aside className="hero__panel" aria-label="Indicadores da plataforma">
               <div className="hero__stats">
                 <article className="stat">
-                  <p className="stat__value">+320 aulas</p>
-                  <p className="stat__label">Conteudo em areas de tecnologia, carreira e negocios.</p>
+                  <p className="stat__value">Catalogo curado</p>
+                  <p className="stat__label">Videos com categoria, nivel, duracao e status de acesso.</p>
                 </article>
                 <article className="stat">
-                  <p className="stat__value">Trilhas guiadas</p>
-                  <p className="stat__label">Sequencia recomendada para quem quer sair do basico ao avancado.</p>
+                  <p className="stat__value">Avaliacoes</p>
+                  <p className="stat__label">Usuarios autenticados publicam notas e comentarios nos conteudos.</p>
                 </article>
                 <article className="stat">
-                  <p className="stat__value">Acesso continuo</p>
-                  <p className="stat__label">Assista quando quiser e avance com autonomia.</p>
+                  <p className="stat__value">Admin seguro</p>
+                  <p className="stat__label">Funcoes administrativas exigem permissao e protecao CSRF.</p>
                 </article>
               </div>
             </aside>
@@ -57,25 +58,19 @@ export default function HomePage() {
               <article className="card">
                 <div className="card__icon" aria-hidden="true">1</div>
                 <h3 className="card__title">Conteudo organizado</h3>
-                <p className="card__description">
-                  Navegacao por categorias e trilhas para reduzir tempo de busca e aumentar tempo de estudo.
-                </p>
+                <p className="card__description">Busca por palavra-chave e filtros por categoria, nivel e duracao.</p>
               </article>
 
               <article className="card">
                 <div className="card__icon" aria-hidden="true">2</div>
                 <h3 className="card__title">Evolucao acelerada</h3>
-                <p className="card__description">
-                  Aulas curtas, objetivas e conectadas para manter progresso constante semana apos semana.
-                </p>
+                <p className="card__description">Cadastro, login, sessao, logout e bloqueio de tentativas invalidas.</p>
               </article>
 
               <article className="card">
                 <div className="card__icon" aria-hidden="true">3</div>
                 <h3 className="card__title">Experiencia confiavel</h3>
-                <p className="card__description">
-                  Interface limpa e pronta para integracao com API e recursos de conta do aluno.
-                </p>
+                <p className="card__description">CRUD de videos e gerenciamento de usuarios no painel administrativo.</p>
               </article>
             </div>
           </div>

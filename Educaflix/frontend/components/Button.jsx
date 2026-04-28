@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-export default function Button({ children, href, variant = "primary", type = "button", disabled = false }) {
+export default function Button({ children, href, variant = "primary", type = "button", disabled = false, onClick }) {
   const className = `button button--${variant}`;
 
   if (href) {
@@ -12,7 +12,7 @@ export default function Button({ children, href, variant = "primary", type = "bu
   }
 
   return (
-    <button className={className} type={type} disabled={disabled}>
+    <button className={className} type={type} disabled={disabled} onClick={onClick}>
       {children}
     </button>
   );
