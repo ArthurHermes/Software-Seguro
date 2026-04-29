@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <title>Atividade RSA Didática</title>
+  <style>
+    body { font-family: sans-serif; max-width: 1000px; margin: 20px auto; line-height: 1.4; }
+    textarea { width: 100%; min-height: 140px; font-family: monospace; }
+    input[type="text"] { width: 100%; padding: 8px; }
+    button { padding: 10px 14px; margin-top: 10px; }
+    pre, code { background: #f4f4f4; padding: 10px; display: block; white-space: pre-wrap; word-break: break-word; }
+    .box { border: 1px solid #ccc; padding: 14px; margin-bottom: 18px; border-radius: 8px; }
+    .erro { color: #b00020; font-weight: bold; }
+    .ok { color: #0a7a2f; font-weight: bold; }
+  </style>
+</head>
+<body>
+
+  <h1>Atividade RSA Didática</h1>
+
+  <div class="box">
+    <h2>1. Gere seu par de chaves no bash</h2>
+    <pre>openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 -out aluno_priv.pem
+openssl pkey -in aluno_priv.pem -pubout -out aluno_pub.pem
+cat aluno_pub.pem</pre>
+
+    <p>Copie a chave pública exibida no terminal e cole abaixo.</p>
+  </div>
+
+  <div class="box">
+    <h2>2. Cole sua chave pública e informe sua matrícula</h2>
+
+    <label>Chave pública PEM do aluno</label>
+    <textarea id="pubkey" placeholder="Cole aqui a chave pública do aluno"></textarea>
+
+    <label>Matrícula</label>
+    <input type="text" id="matricula" placeholder="Digite sua matrícula">
+
+    <button id="btnCifrar">Cifrar meu segredo</button>
+
+    <p id="status"></p>
+  </div>
+
+  <div class="box">
+    <h2>3. Ciphertext em Base64</h2>
+    <textarea id="cipherB64" readonly placeholder="O ciphertext em base64 aparecerá aqui"></textarea>
+  </div>
+
+  <div class="box">
+    <h2>4. Como decifrar no bash com sua privada</h2>
+    <pre id="cmdDecifrar">echo 'COLE_AQUI_O_BASE64' | base64 -d > msg.bin
+openssl pkeyutl -decrypt -inkey aluno_priv.pem -in msg.bin -pkeyopt rsa_padding_mode:oaep -pkeyopt rsa_oaep_md:sha256 -pkeyopt rsa_mgf1_md:sha256 > msg.txt
+cat msg.txt</pre>
+  </div>
+
+
+  <script>
+    // Se você entendeu o que está acontecendo aqui, por favor... não entregue pronta para outra pessoa:
+    
+    // Ajude seu colega a aprender de verdade: explique a ideia, o caminho e os conceitos, mas não faça a atividade por ele(a). Deus te abençoe grandemente.
+    const sgb64 = `ewogICAgICAiNDAwNzQ4MTMiOiAicmFzY2hlIEV1bGUiLAogICAgICAiNDAwNzM4NzYiOiAicmFzY2hlIFJhYmUiLAogICAgICAiNDAwNzYzNTgiOiAiZmxpbmtlIEZ1Y2hzIiwKICAgICAgIjQwMDc2ODA3IjogInJhc2NoZSBBYWwiLAogICAgICAiNDAwOTAyMzUiOiAibGVpc2UgRXVsZSIsCiAgICAgICI0MDA5NTM0NSI6ICJrbHVnZSBJZ2VsIiwKICAgICAgIjQwMDczNDk3IjogImxlaXNlIEFhbCIsCiAgICAgICI0MDA3NjA4OSI6ICJrbHVnZSBNYXJkZXIiLAogICAgICAiNDAwNTE1MzciOiAiYWx0ZSBIaXJzY2giLAogICAgICAiNDAxMDIzNTciOiAicmFzY2hlIFplYnJhIiwKICAgICAgIjQwMDgyMzQxIjogImtsdWdlIEhpcnNjaCIsCiAgICAgICI0MDA2MzI0MSI6ICJnb2xkZW5lIEthdGVyIiwKICAgICAgIjQwMDczMDY3IjogImZsaW5rZSBLYXRlciIsCiAgICAgICI0MDA4Mzc0MSI6ICJicmF2ZSBaZWJyYSIsCiAgICAgICI0MDA3NjA5MyI6ICJyb3RlIEZ1Y2hzIiwKICAgICAgIjQwMDkzMDMxIjogInJvdGUgUGFuZGEiLAogICAgICAiODkzODk3OTciOiAicm90ZSBBYWwiLAogICAgICAiNDAwNzM3ODEiOiAid2lsZGUgTWFyZGVyIiwKICAgICAgIjQwMDI4NjMxIjogInJvdGUgTWFyZGVyIiwKICAgICAgIjQwMDc5MTU1IjogImJyYXZlIElnZWwiLAogICAgICAiNDAwNDEwODIiOiAiYnJhdmUgTWFyZGVyIiwKICAgICAgIjQwMDkzMzc2IjogIm11dGlnZSBIdW5kIiwKICAgICAgIjQwMDk1NDY2IjogImZsaW5rZSBUaWdlciIsCiAgICAgICI0MDA5MDIwOSI6ICJnb2xkZW5lIElnZWwiLAogICAgICAiNDAwOTAyNjIiOiAiZ29sZGVuZSBXb2xmIiwKICAgICAgIjQwMDk2NjUxIjogImJyYXZlIFBhbmRhIiwKICAgICAgIjQwMDk1MzE2IjogImFsdGUgTWFyZGVyIiwKICAgICAgIjQwMDAwMzg2IjogImJsYXVlIFBhbmRhIiwKICAgICAgIjQwMDkyNzI5IjogInN0YXJrZSBLYXRlciIsCiAgICAgICI0MDA0MjcwMSI6ICJibGF1ZSBNYXJkZXIiLAogICAgICAiNDAwOTUzNTMiOiAid2Vpc2UgRnVjaHMiLAogICAgICAiNDAxMDczNDgiOiAid2Vpc2UgSHVuZCIsCiAgICAgICI0MDA5MzA4OCI6ICJrbHVnZSBFdWxlIiwKICAgICAgIjQwMDU3ODI0IjogImJyYXZlIERhY2hzIiwKICAgICAgIjQwMDk1MzI3IjogIm11dGlnZSBSYWJlIiwKICAgICAgIjg5MzEyMTgwIjogIndlaXNlIFdvbGYiLAogICAgICAiNDAwOTMxOTkiOiAid2lsZGUgQsOkciIsCiAgICAgICI0MDA5NjY1MCI6ICJyYXNjaGUgQsOkciIsCiAgICAgICI0MDAwMjY0NyI6ICJoZWxsZSBXb2xmIiwKICAgICAgIjQwMDI4NzMyIjogImJsYXVlIFplYnJhIiwKICAgICAgIjQwMDkwNzk0IjogIm11dGlnZSBEYWNocyIsCiAgICAgICI0MDEwNzE1MCI6ICJyYXNjaGUgSWdlbCIsCiAgICAgICI4OTA3MzgyOSI6ICJrbHVnZSBCw6RyIiwKICAgICAgIjg5MzMzOTg0IjogImxlaXNlIE1hcmRlciIsCiAgICAgICI0MDA3Mzc4NSI6ICJmcm9oZSBQYW5kYSIsCiAgICAgICI0MDA5NTM0MCI6ICJyYXNjaGUgRnVjaHMiLAogICAgICAiNDAwOTUzNjMiOiAiZnJvaGUgSGlyc2NoIgp9Cg==`;
+
+    function b64Utf8ToText(b64) {
+      const bin = atob(b64);
+      const bytes = new Uint8Array([...bin].map(c => c.charCodeAt(0)));
+      return new TextDecoder("utf-8").decode(bytes);
+    }
+    const SEGS = JSON.parse(b64Utf8ToText(sgb64));;
+
+    const pubkeyEl = document.getElementById("pubkey");
+    const matriculaEl = document.getElementById("matricula");
+    const btnCifrar = document.getElementById("btnCifrar");
+    const cipherB64El = document.getElementById("cipherB64");
+    const statusEl = document.getElementById("status");
+    const cmdDecifrarEl = document.getElementById("cmdDecifrar");
+
+    function pemToArrayBuffer(pem) {
+      const b64 = pem
+        .replace(/-----BEGIN PUBLIC KEY-----/g, "")
+        .replace(/-----END PUBLIC KEY-----/g, "")
+        .replace(/\s+/g, "");
+
+      const binary = atob(b64);
+      const bytes = new Uint8Array(binary.length);
+
+      for (let i = 0; i < binary.length; i++) {
+        bytes[i] = binary.charCodeAt(i);
+      }
+
+      return bytes.buffer;
+    }
+
+    function arrayBufferToBase64(buffer) {
+      const bytes = new Uint8Array(buffer);
+      let binary = "";
+      for (let i = 0; i < bytes.length; i++) {
+        binary += String.fromCharCode(bytes[i]);
+      }
+      return btoa(binary);
+    }
+
+    async function importarChavePublica(pem) {
+      const keyData = pemToArrayBuffer(pem);
+
+      return crypto.subtle.importKey(
+        "spki",
+        keyData,
+        {
+          name: "RSA-OAEP",
+          hash: "SHA-256"
+        },
+        false,
+        ["encrypt"]
+      );
+    }
+
+    async function cifrarSegredo(pubPem, matricula) {
+      const segredo = SEGS[matricula];
+      if (!segredo) {
+        throw new Error("Matrícula não encontrada na lista de segredos.");
+      }
+
+      const publicKey = await importarChavePublica(pubPem);
+      const texto = new TextEncoder().encode(segredo);
+
+      const ciphertext = await crypto.subtle.encrypt(
+        { name: "RSA-OAEP" },
+        publicKey,
+        texto
+      );
+
+      return arrayBufferToBase64(ciphertext);
+    }
+
+    btnCifrar.addEventListener("click", async () => {
+      statusEl.textContent = "";
+      statusEl.className = "";
+      cipherB64El.value = "";
+
+      const pubPem = pubkeyEl.value.trim();
+      const matricula = matriculaEl.value.trim();
+
+      if (!pubPem) {
+        statusEl.textContent = "Cole a chave pública.";
+        statusEl.className = "erro";
+        return;
+      }
+
+      if (!matricula) {
+        statusEl.textContent = "Digite a matrícula.";
+        statusEl.className = "erro";
+        return;
+      }
+
+      try {
+        const b64 = await cifrarSegredo(pubPem, matricula);
+        cipherB64El.value = b64;
+
+        cmdDecifrarEl.textContent =
+`echo '${b64}' | base64 -d > msg.bin
+openssl pkeyutl -decrypt -inkey aluno_priv.pem -in msg.bin -pkeyopt rsa_padding_mode:oaep -pkeyopt rsa_oaep_md:sha256 -pkeyopt rsa_mgf1_md:sha256 > msg.txt
+cat msg.txt`;
+
+        statusEl.textContent = "Mensagem cifrada com sucesso.";
+        statusEl.className = "ok";
+      } catch (e) {
+        statusEl.textContent = "Erro: " + e.message;
+        statusEl.className = "erro";
+      }
+    });
+  </script>
+
+</body>
+</html>
