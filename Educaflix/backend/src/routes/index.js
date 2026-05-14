@@ -3,7 +3,8 @@ const authController = require("../controllers/authController");
 const videoController = require("../controllers/videoController");
 const reviewController = require("../controllers/reviewController");
 const adminController = require("../controllers/adminController");
-const { authenticate, requireAdmin, requireCsrf } = require("../middlewares/authMiddleware");
+const { authenticate, requireCsrf } = require("../middlewares/authMiddleware");
+const { requireAdmin } = require("../middlewares/adminMiddleware");
 
 async function routeRequest(req, res) {
   const url = new URL(req.url, "http://localhost");

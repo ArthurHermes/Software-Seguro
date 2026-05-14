@@ -2,17 +2,31 @@ const { getCookies, sendJson } = require("../utils/http");
 const { getSession } = require("../services/sessionService");
 const { findUserById, publicUser } = require("../repositories/userRepository");
 
+function sendAuthRequired(res) {
+  sendJson(res, 401, {
+    erro: "Autenticacao obrigatoria.",
+    codigo: "AUTH_REQUIRED"
+  });
+}
+
+function sendAccessDenied(res, code = "ACCESS_DENIED") {
+  sendJson(res, 403, {
+    erro: "Acesso negado.",
+    codigo: code
+  });
+}
+
 function authenticate(req, res) {
   const cookies = getCookies(req);
   const session = getSession(cookies.educaflix_session);
   if (!session) {
-    sendJson(res, 401, { erro: "Autenticacao obrigatoria." });
+    sendAuthRequired(res);
     return null;
   }
 
   const user = findUserById(session.userId);
   if (!user || user.status !== "ativo") {
-    sendJson(res, 401, { erro: "Autenticacao obrigatoria." });
+    sendAuthRequired(res);
     return null;
   }
 
@@ -21,28 +35,21 @@ function authenticate(req, res) {
   return req.user;
 }
 
-function requireAdmin(req, res) {
-  const user = authenticate(req, res);
-  if (!user) return null;
-
-  if (user.role !== "admin") {
-    sendJson(res, 403, { erro: "Permissao insuficiente." });
-    return null;
-  }
-
-  return user;
-}
-
 function requireCsrf(req, res) {
   if (!["POST", "PUT", "PATCH", "DELETE"].includes(req.method)) return true;
 
   const csrfHeader = req.headers["x-csrf-token"];
   if (!req.session || csrfHeader !== req.session.csrfToken) {
-    sendJson(res, 403, { erro: "Requisicao nao autorizada." });
+    sendAccessDenied(res, "CSRF_INVALID");
     return false;
   }
 
   return true;
 }
 
-module.exports = { authenticate, requireAdmin, requireCsrf };
+module.exports = {
+  authenticate,
+  requireCsrf,
+  sendAccessDenied,
+  sendAuthRequired
+};
