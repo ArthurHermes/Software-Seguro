@@ -78,7 +78,8 @@ function defaultDatabase() {
     videos: initialVideos,
     reviews: [],
     sessions: [],
-    loginAttempts: []
+    loginAttempts: [],
+    loginAttemptLogs: []
   };
 }
 
@@ -95,7 +96,7 @@ function initializeDatabase() {
   const db = readDatabase();
   let changed = false;
 
-  for (const key of ["users", "videos", "reviews", "sessions", "loginAttempts"]) {
+  for (const key of ["users", "videos", "reviews", "sessions", "loginAttempts", "loginAttemptLogs"]) {
     if (!Array.isArray(db[key])) {
       db[key] = [];
       changed = true;
