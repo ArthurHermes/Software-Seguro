@@ -3,7 +3,8 @@ const { readJsonBody, sendJson, setCookie, clearCookie, getCookies, getClientIp 
 const { validateCadastro, validateLogin } = require("../validators/schemas");
 const { hashPassword, verifyPassword } = require("../services/passwordService");
 const { createSession, invalidateSession } = require("../services/sessionService");
-const { clearFailures, isBlocked, registerFailure } = require("../services/loginAttemptService");
+const { clearFailures, logLoginAttempt, registerFailure } = require("../services/loginAttemptService");
+const { GENERIC_LOGIN_ERROR, enforceLoginRateLimit } = require("../middlewares/loginRateLimitMiddleware");
 const { createUser, findUserByEmail, publicUser } = require("../repositories/userRepository");
 
 async function cadastro(req, res) {
@@ -33,10 +34,14 @@ async function login(req, res) {
   const payload = await readJsonBody(req);
   const validation = validateLogin(payload);
   const ip = getClientIp(req);
-  if (!validation.ok) return sendJson(res, 401, { erro: "E-mail ou senha invalidos." });
+  const email = validation.ok ? validation.data.email : payload?.email;
 
-  if (isBlocked(validation.data.email, ip)) {
-    return sendJson(res, 429, { erro: "E-mail ou senha invalidos." });
+  if (!enforceLoginRateLimit(req, res, email, ip)) return;
+
+  if (!validation.ok) {
+    registerFailure(email, ip);
+    logLoginAttempt({ email, ip, outcome: "failure", reason: "invalid_payload" });
+    return sendJson(res, 401, { erro: GENERIC_LOGIN_ERROR });
   }
 
   const user = findUserByEmail(validation.data.email);
@@ -47,10 +52,12 @@ async function login(req, res) {
 
   if (!canLogin) {
     registerFailure(validation.data.email, ip);
-    return sendJson(res, 401, { erro: "E-mail ou senha invalidos." });
+    logLoginAttempt({ email: validation.data.email, ip, outcome: "failure", reason: "invalid_credentials" });
+    return sendJson(res, 401, { erro: GENERIC_LOGIN_ERROR });
   }
 
-  clearFailures(validation.data.email, ip);
+  clearFailures(validation.data.email);
+  logLoginAttempt({ email: validation.data.email, ip, outcome: "success", reason: "authenticated" });
   const session = createSession(user.id);
   setCookie(res, "educaflix_session", session.token, {
     maxAge: 60 * 60 * 2,
