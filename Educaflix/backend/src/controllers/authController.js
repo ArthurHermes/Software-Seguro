@@ -1,25 +1,22 @@
 const crypto = require("crypto");
-const { readJsonBody, sendJson, setCookie, clearCookie, getCookies, getClientIp } = require("../utils/http");
-const { validateCadastro, validateLogin } = require("../validators/schemas");
+const { sendJson, setCookie, clearCookie, getCookies, getClientIp } = require("../utils/http");
 const { hashPassword, verifyPassword } = require("../services/passwordService");
 const { createSession, invalidateSession } = require("../services/sessionService");
 const { clearFailures, logLoginAttempt, registerFailure } = require("../services/loginAttemptService");
 const { GENERIC_LOGIN_ERROR, enforceLoginRateLimit } = require("../middlewares/loginRateLimitMiddleware");
 const { createUser, findUserByEmail, publicUser } = require("../repositories/userRepository");
 
-async function cadastro(req, res) {
-  const payload = await readJsonBody(req);
-  const validation = validateCadastro(payload);
-  if (!validation.ok) return sendJson(res, 400, { erro: validation.message });
+function cadastro(req, res) {
+  const payload = req.validatedBody;
 
-  const existing = findUserByEmail(validation.data.email);
+  const existing = findUserByEmail(payload.email);
   if (existing) return sendJson(res, 409, { erro: "Este e-mail ja esta cadastrado." });
 
-  const password = hashPassword(validation.data.senha);
+  const password = hashPassword(payload.senha);
   const user = createUser({
     id: crypto.randomUUID(),
-    nome: validation.data.nome,
-    email: validation.data.email,
+    nome: payload.nome,
+    email: payload.email,
     senhaHash: password.hash,
     senhaSalt: password.salt,
     role: "usuario",
@@ -30,34 +27,27 @@ async function cadastro(req, res) {
   sendJson(res, 201, { mensagem: "Cadastro realizado com sucesso.", usuario: user });
 }
 
-async function login(req, res) {
-  const payload = await readJsonBody(req);
-  const validation = validateLogin(payload);
+function login(req, res) {
+  const payload = req.validatedBody;
   const ip = getClientIp(req);
-  const email = validation.ok ? validation.data.email : payload?.email;
+  const email = payload.email;
 
   if (!enforceLoginRateLimit(req, res, email, ip)) return;
 
-  if (!validation.ok) {
-    registerFailure(email, ip);
-    logLoginAttempt({ email, ip, outcome: "failure", reason: "invalid_payload" });
-    return sendJson(res, 401, { erro: GENERIC_LOGIN_ERROR });
-  }
-
-  const user = findUserByEmail(validation.data.email);
+  const user = findUserByEmail(payload.email);
   const canLogin =
     user &&
     user.status === "ativo" &&
-    verifyPassword(validation.data.senha, user.senhaSalt, user.senhaHash);
+    verifyPassword(payload.senha, user.senhaSalt, user.senhaHash);
 
   if (!canLogin) {
-    registerFailure(validation.data.email, ip);
-    logLoginAttempt({ email: validation.data.email, ip, outcome: "failure", reason: "invalid_credentials" });
+    registerFailure(payload.email, ip);
+    logLoginAttempt({ email: payload.email, ip, outcome: "failure", reason: "invalid_credentials" });
     return sendJson(res, 401, { erro: GENERIC_LOGIN_ERROR });
   }
 
-  clearFailures(validation.data.email);
-  logLoginAttempt({ email: validation.data.email, ip, outcome: "success", reason: "authenticated" });
+  clearFailures(payload.email);
+  logLoginAttempt({ email: payload.email, ip, outcome: "success", reason: "authenticated" });
   const session = createSession(user.id);
   setCookie(res, "educaflix_session", session.token, {
     maxAge: 60 * 60 * 2,
