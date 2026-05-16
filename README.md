@@ -107,3 +107,4 @@ Componente reutilizável: `<app-input>`
 - **Tipografia Sora + Manrope**: combinação moderna com boa legibilidade em desktop e mobile.
 - **Componentes Web reutilizáveis** (`app-header`, `app-button`, `app-input`): simplificam manutenção e facilitam escala.
 
+

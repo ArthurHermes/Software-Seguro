@@ -1,6 +1,5 @@
 const crypto = require("crypto");
-const { parseUrl, readJsonBody, sendJson } = require("../utils/http");
-const { validateVideo, validateVideoQuery } = require("../validators/schemas");
+const { sendJson } = require("../utils/http");
 const {
   createVideo,
   deleteVideo,
@@ -12,8 +11,7 @@ const {
 const { listReviewsByVideo } = require("../repositories/reviewRepository");
 
 function list(req, res) {
-  const { query } = parseUrl(req);
-  const filters = validateVideoQuery(query);
+  const filters = req.validatedQuery;
   sendJson(res, 200, { videos: listVideos(filters), filtros: filters });
 }
 
@@ -27,15 +25,11 @@ function detail(req, res, id) {
   sendJson(res, 200, { video, avaliacoes: listReviewsByVideo(id) });
 }
 
-async function create(req, res) {
-  const payload = await readJsonBody(req);
-  const validation = validateVideo(payload);
-  if (!validation.ok) return sendJson(res, 400, { erro: validation.message });
-
+function create(req, res) {
   const now = new Date().toISOString();
   const video = createVideo({
     id: crypto.randomUUID(),
-    ...validation.data,
+    ...req.validatedBody,
     criadoEm: now,
     atualizadoEm: now
   });
@@ -43,12 +37,8 @@ async function create(req, res) {
   sendJson(res, 201, { mensagem: "Video cadastrado.", video });
 }
 
-async function update(req, res, id) {
-  const payload = await readJsonBody(req);
-  const validation = validateVideo(payload);
-  if (!validation.ok) return sendJson(res, 400, { erro: validation.message });
-
-  const video = updateVideo(id, validation.data);
+function update(req, res, id) {
+  const video = updateVideo(id, req.validatedBody);
   if (!video) return sendJson(res, 404, { erro: "Video nao encontrado." });
 
   sendJson(res, 200, { mensagem: "Video atualizado.", video });
