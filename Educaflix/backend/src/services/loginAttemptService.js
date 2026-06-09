@@ -1,4 +1,4 @@
-const { readDatabase, writeDatabase } = require("../database/jsonDatabase");
+const { getDatabase, rowToLoginAttempt } = require("../database/sqliteDatabase");
 
 const WINDOW_MS = 15 * 60 * 1000;
 const LOCK_MS = 15 * 60 * 1000;
@@ -32,27 +32,30 @@ function isExpired(attempt, nowMs = Date.now()) {
 }
 
 function cleanupExpiredLoginAttempts() {
-  const db = readDatabase();
-  if (!Array.isArray(db.loginAttempts)) db.loginAttempts = [];
   const nowMs = Date.now();
-  const before = db.loginAttempts.length;
+  const db = getDatabase();
+  const attempts = db.prepare("SELECT * FROM login_attempts").all().map(rowToLoginAttempt);
+  const expiredKeys = attempts.filter((attempt) => isExpired(attempt, nowMs)).map((attempt) => attempt.key);
+  if (expiredKeys.length === 0) return;
 
-  db.loginAttempts = db.loginAttempts.filter((attempt) => !isExpired(attempt, nowMs));
-
-  if (db.loginAttempts.length !== before) {
-    writeDatabase(db);
-  }
+  const removeExpired = db.prepare("DELETE FROM login_attempts WHERE key = ?");
+  const transaction = db.transaction((keys) => {
+    for (const key of keys) removeExpired.run(key);
+  });
+  transaction(expiredKeys);
 }
 
 function getBlockedAttempt(email, ip) {
   cleanupExpiredLoginAttempts();
 
-  const db = readDatabase();
-  if (!Array.isArray(db.loginAttempts)) db.loginAttempts = [];
+  const db = getDatabase();
   const nowMs = Date.now();
+  const findAttempt = db.prepare("SELECT * FROM login_attempts WHERE key = ? LIMIT 1");
 
   return getKeys(email, ip)
-    .map(({ key }) => db.loginAttempts.find((item) => item.key === key))
+    .map(({ key }) => findAttempt.get(key))
+    .filter(Boolean)
+    .map(rowToLoginAttempt)
     .find((attempt) => attempt?.lockedUntil && new Date(attempt.lockedUntil).getTime() > nowMs) || null;
 }
 
@@ -61,59 +64,57 @@ function isBlocked(email, ip) {
 }
 
 function upsertFailure(db, target, now) {
-  const existing = db.loginAttempts.find((item) => item.key === target.key);
+  const existingRow = db.prepare("SELECT * FROM login_attempts WHERE key = ? LIMIT 1").get(target.key);
+  const existing = existingRow ? rowToLoginAttempt(existingRow) : null;
   const nowMs = now.getTime();
 
   if (!existing || isExpired(existing, nowMs)) {
-    db.loginAttempts = db.loginAttempts.filter((item) => item.key !== target.key);
-    db.loginAttempts.push({
-      key: target.key,
-      scope: target.scope,
-      identifier: target.identifier,
-      count: 1,
-      firstAttemptAt: now.toISOString(),
-      lastAttemptAt: now.toISOString(),
-      lockedUntil: null
-    });
+    db.prepare("DELETE FROM login_attempts WHERE key = ?").run(target.key);
+    db.prepare(`
+      INSERT INTO login_attempts (key, scope, identifier, count, first_attempt_at, last_attempt_at, locked_until)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      target.key,
+      target.scope,
+      target.identifier,
+      1,
+      now.toISOString(),
+      now.toISOString(),
+      null
+    );
   } else {
-    existing.count += 1;
-    existing.lastAttemptAt = now.toISOString();
-    if (existing.count >= MAX_ATTEMPTS) {
-      existing.lockedUntil = new Date(nowMs + LOCK_MS).toISOString();
-    }
+    const count = existing.count + 1;
+    const lockedUntil = count >= MAX_ATTEMPTS ? new Date(nowMs + LOCK_MS).toISOString() : existing.lockedUntil;
+    db.prepare(`
+      UPDATE login_attempts
+      SET count = ?, last_attempt_at = ?, locked_until = ?
+      WHERE key = ?
+    `).run(count, now.toISOString(), lockedUntil || null, target.key);
   }
 }
 
 function registerFailure(email, ip) {
   cleanupExpiredLoginAttempts();
 
-  const db = readDatabase();
-  if (!Array.isArray(db.loginAttempts)) db.loginAttempts = [];
+  const db = getDatabase();
   const now = new Date();
   const keys = getKeys(email, ip);
 
   keys.forEach((target) => upsertFailure(db, target, now));
-
-  writeDatabase(db);
 }
 
 function clearFailures(email) {
   cleanupExpiredLoginAttempts();
 
-  const db = readDatabase();
-  if (!Array.isArray(db.loginAttempts)) db.loginAttempts = [];
   const account = normalizeAccount(email);
   if (!account) return;
 
-  const keysToClear = new Set([keyFor("account", account)]);
-
-  db.loginAttempts = db.loginAttempts.filter((item) => !keysToClear.has(item.key));
-  writeDatabase(db);
+  const db = getDatabase();
+  db.prepare("DELETE FROM login_attempts WHERE key = ?").run(keyFor("account", account));
 }
 
 function logLoginAttempt({ email, ip, outcome, reason }) {
-  const db = readDatabase();
-  if (!Array.isArray(db.loginAttemptLogs)) db.loginAttemptLogs = [];
+  const db = getDatabase();
   const log = {
     id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
     email: normalizeAccount(email) || null,
@@ -123,9 +124,16 @@ function logLoginAttempt({ email, ip, outcome, reason }) {
     occurredAt: new Date().toISOString()
   };
 
-  db.loginAttemptLogs.push(log);
-  db.loginAttemptLogs = db.loginAttemptLogs.slice(-MAX_LOGS);
-  writeDatabase(db);
+  db.prepare(`
+    INSERT INTO login_attempt_logs (id, email, ip, outcome, reason, occurred_at)
+    VALUES (?, ?, ?, ?, ?, ?)
+  `).run(log.id, log.email, log.ip, log.outcome, log.reason, log.occurredAt);
+  db.prepare(`
+    DELETE FROM login_attempt_logs
+    WHERE id NOT IN (
+      SELECT id FROM login_attempt_logs ORDER BY occurred_at DESC LIMIT ?
+    )
+  `).run(MAX_LOGS);
 
   console.info("Tentativa de login:", {
     email: log.email || "nao_informado",

@@ -1,47 +1,60 @@
-const { readDatabase, writeDatabase } = require("../database/jsonDatabase");
+const { getDatabase, rowToReview } = require("../database/sqliteDatabase");
 
 function listReviewsByVideo(videoId) {
-  const db = readDatabase();
-  return db.reviews
-    .filter((review) => review.videoId === videoId)
-    .map((review) => {
-      const user = db.users.find((item) => item.id === review.userId);
-      return { ...review, autor: user?.nome || "Usuario" };
-    });
+  const db = getDatabase();
+  return db.prepare(`
+    SELECT reviews.*, users.nome AS autor
+    FROM reviews
+    LEFT JOIN users ON users.id = reviews.user_id
+    WHERE reviews.video_id = ?
+    ORDER BY reviews.criado_em DESC
+  `).all(videoId).map((row) => ({ ...rowToReview(row), autor: row.autor || "Usuario" }));
 }
 
 function findReviewById(id) {
-  return readDatabase().reviews.find((review) => review.id === id) || null;
+  const db = getDatabase();
+  const row = db.prepare("SELECT * FROM reviews WHERE id = ? LIMIT 1").get(id);
+  return row ? rowToReview(row) : null;
 }
 
 function findReviewByUserAndVideo(userId, videoId) {
-  return readDatabase().reviews.find((review) => review.userId === userId && review.videoId === videoId) || null;
+  const db = getDatabase();
+  const row = db
+    .prepare("SELECT * FROM reviews WHERE user_id = ? AND video_id = ? LIMIT 1")
+    .get(userId, videoId);
+  return row ? rowToReview(row) : null;
 }
 
 function createReview(review) {
-  const db = readDatabase();
-  db.reviews.push(review);
-  writeDatabase(db);
+  const db = getDatabase();
+  db.prepare(`
+    INSERT INTO reviews (id, video_id, user_id, nota, comentario, criado_em, atualizado_em)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+  `).run(
+    review.id,
+    review.videoId,
+    review.userId,
+    review.nota,
+    review.comentario,
+    review.criadoEm,
+    review.atualizadoEm
+  );
   return review;
 }
 
 function updateReview(id, updates) {
-  const db = readDatabase();
-  const review = db.reviews.find((item) => item.id === id);
-  if (!review) return null;
-
-  Object.assign(review, updates, { atualizadoEm: new Date().toISOString() });
-  writeDatabase(db);
-  return review;
+  const db = getDatabase();
+  const result = db
+    .prepare("UPDATE reviews SET nota = ?, comentario = ?, atualizado_em = ? WHERE id = ?")
+    .run(updates.nota, updates.comentario, new Date().toISOString(), id);
+  if (result.changes === 0) return null;
+  return findReviewById(id);
 }
 
 function deleteReview(id) {
-  const db = readDatabase();
-  const exists = db.reviews.some((review) => review.id === id);
-  if (!exists) return false;
-  db.reviews = db.reviews.filter((review) => review.id !== id);
-  writeDatabase(db);
-  return true;
+  const db = getDatabase();
+  const result = db.prepare("DELETE FROM reviews WHERE id = ?").run(id);
+  return result.changes > 0;
 }
 
 module.exports = {

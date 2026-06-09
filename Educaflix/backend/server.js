@@ -1,5 +1,5 @@
 const { createServer } = require("./src/app");
-const { initializeDatabase } = require("./src/database/jsonDatabase");
+const { initializeDatabase } = require("./src/database/sqliteDatabase");
 const { startLoginAttemptCleanup } = require("./src/services/loginAttemptService");
 
 const PORT = process.env.PORT || 3333;

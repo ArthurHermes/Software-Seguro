@@ -1,86 +1,134 @@
-const { readDatabase, writeDatabase } = require("../database/jsonDatabase");
+const { getDatabase, rowToVideo } = require("../database/sqliteDatabase");
 
 function listVideos(filters = {}) {
   const { busca, categoria, nivel, duracao } = filters;
-  const db = readDatabase();
-  let videos = [...db.videos];
+  const db = getDatabase();
+  const conditions = [];
+  const params = [];
 
   if (busca) {
-    const normalized = busca.toLowerCase();
-    videos = videos.filter((video) =>
-      [video.titulo, video.descricao, video.tema].some((field) =>
-        String(field || "").toLowerCase().includes(normalized)
-      )
-    );
+    conditions.push("(LOWER(titulo) LIKE ? OR LOWER(descricao) LIKE ? OR LOWER(tema) LIKE ?)");
+    const search = `%${busca.toLowerCase()}%`;
+    params.push(search, search, search);
   }
 
   if (categoria) {
-    videos = videos.filter((video) => video.categoria === categoria);
+    conditions.push("categoria = ?");
+    params.push(categoria);
   }
 
   if (nivel) {
-    videos = videos.filter((video) => video.nivel === nivel);
+    conditions.push("nivel = ?");
+    params.push(nivel);
   }
 
-  if (duracao === "curta") videos = videos.filter((video) => video.duracaoMinutos <= 20);
-  if (duracao === "media") videos = videos.filter((video) => video.duracaoMinutos > 20 && video.duracaoMinutos <= 45);
-  if (duracao === "longa") videos = videos.filter((video) => video.duracaoMinutos > 45);
+  if (duracao === "curta") conditions.push("duracao_minutos <= 20");
+  if (duracao === "media") conditions.push("duracao_minutos > 20 AND duracao_minutos <= 45");
+  if (duracao === "longa") conditions.push("duracao_minutos > 45");
 
-  return videos.map(withAverageRating);
+  const where = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
+  const rows = db
+    .prepare(`
+      SELECT
+        videos.*,
+        ROUND(AVG(reviews.nota), 1) AS media_avaliacoes,
+        COUNT(reviews.id) AS total_avaliacoes
+      FROM videos
+      LEFT JOIN reviews ON reviews.video_id = videos.id
+      ${where}
+      GROUP BY videos.id
+      ORDER BY videos.criado_em ASC
+    `)
+    .all(...params);
+
+  return rows.map(rowToVideoWithRating);
 }
 
 function findVideoById(id) {
-  const video = readDatabase().videos.find((item) => item.id === id);
-  return video ? withAverageRating(video) : null;
+  const db = getDatabase();
+  const row = db
+    .prepare(`
+      SELECT
+        videos.*,
+        ROUND(AVG(reviews.nota), 1) AS media_avaliacoes,
+        COUNT(reviews.id) AS total_avaliacoes
+      FROM videos
+      LEFT JOIN reviews ON reviews.video_id = videos.id
+      WHERE videos.id = ?
+      GROUP BY videos.id
+      LIMIT 1
+    `)
+    .get(id);
+
+  return row ? rowToVideoWithRating(row) : null;
 }
 
 function createVideo(video) {
-  const db = readDatabase();
-  db.videos.push(video);
-  writeDatabase(db);
-  return withAverageRating(video);
+  const db = getDatabase();
+  db.prepare(`
+    INSERT INTO videos (
+      id, titulo, descricao, categoria, tema, nivel, duracao_minutos, link, status, criado_em, atualizado_em
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(
+    video.id,
+    video.titulo,
+    video.descricao,
+    video.categoria,
+    video.tema,
+    video.nivel,
+    video.duracaoMinutos,
+    video.link,
+    video.status,
+    video.criadoEm,
+    video.atualizadoEm
+  );
+  return findVideoById(video.id);
 }
 
 function updateVideo(id, updates) {
-  const db = readDatabase();
-  const index = db.videos.findIndex((video) => video.id === id);
-  if (index === -1) return null;
-
-  db.videos[index] = {
-    ...db.videos[index],
-    ...updates,
-    atualizadoEm: new Date().toISOString()
-  };
-  writeDatabase(db);
-  return withAverageRating(db.videos[index]);
+  const db = getDatabase();
+  const result = db.prepare(`
+    UPDATE videos
+    SET titulo = ?, descricao = ?, categoria = ?, tema = ?, nivel = ?, duracao_minutos = ?, link = ?, status = ?, atualizado_em = ?
+    WHERE id = ?
+  `).run(
+    updates.titulo,
+    updates.descricao,
+    updates.categoria,
+    updates.tema,
+    updates.nivel,
+    updates.duracaoMinutos,
+    updates.link,
+    updates.status,
+    new Date().toISOString(),
+    id
+  );
+  if (result.changes === 0) return null;
+  return findVideoById(id);
 }
 
 function deleteVideo(id) {
-  const db = readDatabase();
-  const exists = db.videos.some((video) => video.id === id);
-  if (!exists) return false;
-
-  db.videos = db.videos.filter((video) => video.id !== id);
-  db.reviews = db.reviews.filter((review) => review.videoId !== id);
-  writeDatabase(db);
-  return true;
+  const db = getDatabase();
+  const result = db.prepare("DELETE FROM videos WHERE id = ?").run(id);
+  return result.changes > 0;
 }
 
 function getOptions() {
-  const videos = readDatabase().videos;
+  const db = getDatabase();
+  const videos = db.prepare("SELECT categoria FROM videos ORDER BY categoria ASC").all();
   return {
     categorias: [...new Set(videos.map((video) => video.categoria))].sort(),
     niveis: ["basico", "intermediario", "avancado"]
   };
 }
 
-function withAverageRating(video) {
-  const reviews = readDatabase().reviews.filter((review) => review.videoId === video.id);
-  const mediaAvaliacoes = reviews.length
-    ? Number((reviews.reduce((sum, review) => sum + review.nota, 0) / reviews.length).toFixed(1))
-    : null;
-
-  return { ...video, mediaAvaliacoes, totalAvaliacoes: reviews.length };
+function rowToVideoWithRating(row) {
+  const video = rowToVideo(row);
+  return {
+    ...video,
+    mediaAvaliacoes: row.media_avaliacoes === null ? null : Number(row.media_avaliacoes),
+    totalAvaliacoes: Number(row.total_avaliacoes || 0)
+  };
 }
 
 module.exports = {

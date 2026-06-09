@@ -1,7 +1,11 @@
+"use client";
+
+import { useSession } from "../hooks/useSession";
 import Button from "../components/Button";
 import Header from "../components/Header";
 
 export default function HomePage() {
+  const { user } = useSession();
   const year = new Date().getFullYear();
 
   return (
@@ -22,8 +26,8 @@ export default function HomePage() {
               </p>
 
               <div className="hero__actions">
-                <Button href="/login">Entrar</Button>
-                <Button href="/cadastro" variant="secondary">Cadastrar</Button>
+                {!user ? <Button href="/login">Entrar</Button> : null}
+                {!user ? <Button href="/cadastro" variant="secondary">Cadastrar</Button> : null}
                 <Button href="/videos" variant="secondary">Ver catalogo</Button>
               </div>
             </div>

@@ -1,17 +1,20 @@
 const crypto = require("crypto");
-const { readDatabase, writeDatabase } = require("../database/jsonDatabase");
+const { getDatabase, rowToSession } = require("../database/sqliteDatabase");
 
 const SESSION_TTL_MS = 1000 * 60 * 60 * 2;
 
 function createSession(userId) {
-  const db = readDatabase();
+  const db = getDatabase();
   const token = crypto.randomBytes(32).toString("hex");
   const csrfToken = crypto.randomBytes(24).toString("hex");
   const expiresAt = new Date(Date.now() + SESSION_TTL_MS).toISOString();
+  const now = new Date().toISOString();
 
-  db.sessions = db.sessions.filter((session) => session.expiresAt > new Date().toISOString());
-  db.sessions.push({ token, csrfToken, userId, expiresAt, invalidated: false });
-  writeDatabase(db);
+  db.prepare("DELETE FROM sessions WHERE expires_at <= ?").run(now);
+  db.prepare(`
+    INSERT INTO sessions (token, csrf_token, user_id, expires_at, invalidated)
+    VALUES (?, ?, ?, ?, 0)
+  `).run(token, csrfToken, userId, expiresAt);
 
   return { token, csrfToken, expiresAt };
 }
@@ -19,27 +22,24 @@ function createSession(userId) {
 function getSession(token) {
   if (!token) return null;
 
-  const db = readDatabase();
-  const session = db.sessions.find((item) => item.token === token && !item.invalidated);
-  if (!session || session.expiresAt <= new Date().toISOString()) return null;
-
+  const db = getDatabase();
+  const row = db
+    .prepare("SELECT * FROM sessions WHERE token = ? AND invalidated = 0 LIMIT 1")
+    .get(token);
+  if (!row) return null;
+  const session = rowToSession(row);
+  if (session.expiresAt <= new Date().toISOString()) return null;
   return session;
 }
 
 function invalidateSession(token) {
-  const db = readDatabase();
-  db.sessions = db.sessions.map((session) =>
-    session.token === token ? { ...session, invalidated: true } : session
-  );
-  writeDatabase(db);
+  const db = getDatabase();
+  db.prepare("UPDATE sessions SET invalidated = 1 WHERE token = ?").run(token);
 }
 
 function invalidateUserSessions(userId) {
-  const db = readDatabase();
-  db.sessions = db.sessions.map((session) =>
-    session.userId === userId ? { ...session, invalidated: true } : session
-  );
-  writeDatabase(db);
+  const db = getDatabase();
+  db.prepare("UPDATE sessions SET invalidated = 1 WHERE user_id = ?").run(userId);
 }
 
 module.exports = {
