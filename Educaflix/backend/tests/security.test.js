@@ -137,6 +137,8 @@ describe("seguranca de autenticacao", () => {
     assert.equal(authenticated.status, 200);
     assert.equal(authenticated.body.usuario.email, "seguro@educaflix.local");
     assert.ok(authenticated.body.csrfToken);
+    assert.match(authenticated.setCookie, /HttpOnly/);
+    assert.match(authenticated.setCookie, /SameSite=Lax/);
   });
 
   test("rota protegida bloqueia usuario nao autenticado", async () => {
@@ -183,6 +185,36 @@ describe("seguranca da entidade principal video", () => {
     });
 
     assert.equal(response.status, 403);
+  });
+
+  test("operacao mutavel autenticada exige token csrf", async () => {
+    const admin = await login("admin@educaflix.local", "Admin@12345");
+    const response = await request("/api/videos", {
+      method: "POST",
+      headers: {
+        Cookie: admin.cookie
+      },
+      body: validVideoPayload()
+    });
+
+    assert.equal(response.status, 403);
+    assert.equal(response.body.codigo, "CSRF_INVALID");
+  });
+
+  test("admin lista usuarios sem expor hash ou salt de senha", async () => {
+    const admin = await login("admin@educaflix.local", "Admin@12345");
+    const response = await request("/api/admin/usuarios", {
+      headers: {
+        Cookie: admin.cookie
+      }
+    });
+
+    assert.equal(response.status, 200);
+    assert.ok(response.body.usuarios.length > 0);
+    for (const usuario of response.body.usuarios) {
+      assert.equal(usuario.senhaHash, undefined);
+      assert.equal(usuario.senhaSalt, undefined);
+    }
   });
 
   test("admin consegue criar, buscar, atualizar e remover video", async () => {
